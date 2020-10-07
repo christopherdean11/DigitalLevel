@@ -1,0 +1,54 @@
+Source,/Users/christopherdean/Dev/stm32/LED_Level/led_level_pcb/led_level_pcb.sch
+Kicad Rev,Eeschema (5.1.5-0-10_14)
+Generated Date,Friday, February 28, 2020 at 07:13:28 AM
+
+Title,Not Set
+Company,Not Set
+Revision,Not Set
+Date Issue,Not Set
+
+Reference,Value,Library,Library Ref
+U1,STM32F030F4Px,MCU_ST_STM32F0,STM32F030F4Px
+D1,LED,Device,LED
+R10,R,Device,R
+J1,Conn_SWD,Connector,Conn_01x05_Male
+SW1,SW_Push,Switch,SW_Push
+SW2,SW_Push,Switch,SW_Push
+U2,MIC5504-3.3YM5,Regulator_Linear,MIC5504-3.3YM5
+U3,ADXL343_Breakout,led_level,ADXL343_Breakout
+J3,Conn_SW_INT,Connector,Conn_01x03_Male
+R1,100,Device,R
+Q1,2N7002,Transistor_FET,2N7002
+Q2,2N7002,Transistor_FET,2N7002
+D2,LED,Device,LED
+D3,LED,Device,LED
+Q3,2N7002,Transistor_FET,2N7002
+Q4,2N7002,Transistor_FET,2N7002
+D4,LED,Device,LED
+R4,100,Device,R
+Q5,2N7002,Transistor_FET,2N7002
+D5,LED,Device,LED
+R5,82,Device,R
+D6,LED,Device,LED
+R6,100,Device,R
+Q6,2N7002,Transistor_FET,2N7002
+Q7,2N7002,Transistor_FET,2N7002
+D7,LED,Device,LED
+R7,100,Device,R
+D8,LED,Device,LED
+R8,100,Device,R
+Q8,2N7002,Transistor_FET,2N7002
+Q9,2N7002,Transistor_FET,2N7002
+D9,LED,Device,LED
+R9,100,Device,R
+R3,100,Device,R
+R2,100,Device,R
+J2,Conn_VIN,Connector,Conn_01x02_Male
+C1,100n,pspice,C
+C2,4.7u,pspice,C
+C3,10n,pspice,C
+C4,1u,pspice,C
+C5,1u,pspice,C
+C6,1u,pspice,C
+SB1,0,Device,R
+SB2,0,Device,R

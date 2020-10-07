@@ -1,0 +1,10 @@
+/code/Drivers
+/code/Debug
+/code/.settings
+/code_original
+*.xlsx
+*.pdf
+*.zip
+/.settings
+.*project
+Digital_Level Debug.*

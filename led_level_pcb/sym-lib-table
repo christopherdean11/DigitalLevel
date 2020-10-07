@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name led_level)(type Legacy)(uri /Users/christopherdean/Dev/stm32/LED_Level/led_level_pcb/led_level.lib)(options "")(descr ""))
+)
