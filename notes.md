@@ -1,4 +1,4 @@
-# Project 1: LED_Level
+# Digital LED Level
 Custom PCB for using an accelerometer as a level with LED indicators. Scope is small to encourage getting to the finish line. 
 
 ## Goals
@@ -6,7 +6,7 @@ Overall: Create a PCB from scratch that can display multiple LED patterns
 - [x] Select a MCU - STM32F030F4
 - [x] Design a PCB
 - [x] Fab the PCB
-- [ ] Populate the PCB
+- [x] Populate the PCB
 - [ ] Code and test the PCB
 
 ## Vender Documentation
@@ -187,29 +187,29 @@ Borrowed an STM32 USB programmer from a friend, got a new error about part is LO
 ```
 ST-LINK Server is required to start the debug session. Download from st.com
 ```
-Ok. Download. Install. No change. Restart the IDE. No change. Ughhh. These STM32's might be cool but I'll never know because the ST tool chain just feels awfully half-baked and half-hearted.  This forum post suggests downgrading from 1.4.2 to 1.4.0 to get it to work. Ughh.  I don't know if I even care anymore, I think I'd rather just start over with a competitor part and try my luck with someone else at this point. 
+Ok. Download. Install. No change. Restart the IDE. No change. :( 
+This forum post suggests downgrading from 1.4.2 to 1.4.0 to get it to work. Ugh.
 https://community.st.com/s/question/0D53W00000GWQKn/how-can-stlink-server-be-installed-for-use-by-stm32cubeide-
-
 
 Tried to manually start the gdb session from the terminal with help here https://jacobmossberg.se/posts/2017/01/17/use-gdb-on-arm-assembly-program.html
 it appeared to work and even saw `ST-LINK device status: RUN_MODE` but my board was still not working, perhaps a fundamental HW issue I just don't see. 
 
-I am ready to start over after some new knowledge of PCB design (although with Altium not KiCad), ideally with a cheap PC from ebay or something. 
+NRST pin is tied to the NRST pin on the SWD jumper but otherwise is floating.  It is supposed to be connected to a 40k ohm (typ) pullup internally.  There is a recommendation for a 0.1uF external capacitor to prevent parasitic resets, which is missing from the PCB design.  
+Will add capacitor to the NRST pin to ground and try again.
+
+#### Other Debugging Ideas
+Maybe try the i2c lines as usart data lines for programming?
+http://eleceng.dit.ie/frank/arm/STM32F030ISP/index.html
+
+Maybe try after driving boot pin high:
+https://electronics.stackexchange.com/questions/410386/stm32f0-boot0-pin-and-swd-programming 
+
 
 ---
 ## Ideas for next rev
 * Add a switch on the vcc input 
 * Add smt LED on 3V3
-* Easily powered from batteries, perhaps need a nice connector for that
-* maybe a slightly bigger footprint on the LDO
+* Just get the thing professionally assembled
+* Would be nice to power from batteries, perhaps need a nice connector for that
 * micro usb for power in connector?
-
-
----
-ideas for debug
-http://eleceng.dit.ie/frank/arm/STM32F030ISP/index.html
-maybe try the i2c lines as usart data lines for programming?
-
-https://electronics.stackexchange.com/questions/410386/stm32f0-boot0-pin-and-swd-programming 
-maybe try after driving boot pin high
 
