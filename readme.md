@@ -7,7 +7,7 @@ Overall: Create a PCB from scratch that can display multiple LED patterns
 - [x] Design a PCB
 - [x] Fab the PCB
 - [x] Populate the PCB
-- [ ] Code and test the PCB
+- [x] Code and test the PCB
 
 ## Vender Documentation
 ### Datasheets:
@@ -103,7 +103,24 @@ Once that is working populate remainder of board and run a progressive blink rou
 * Board ordered on Feb 28 via oshpark
 * Parts ordered on Feb 29 via mouser  
 
-### Bring-up / Debug
+### Bring-up
+
+*As of October 8 2020 this has been resolved and I can talk to the board. Yay :) Still not clear what the fix truly was, but I bought a standalone ST-LINK V2 USB dongle, updated STM CubeIDE to the latest, and completely restarted the Cube project, and all seems to be well.  The program downloads to the micro! The debugger doesn't attach but good enough for now. Original debugging notes kept further down.*
+
+#### Initial Software
+Initially just writing a few LEDs on/off patterns to prove out basic understanding. First realization was when writing the LED state in a loop, the GPIO pin is not incremented by 1 to get to the next pin, its bitshifted by 1, so its acutally
+```c
+uint32_t delay = 200;
+  for (uint8_t i=0; i<7;i++){
+        HAL_GPIO_WritePin(GPIOA, 1<<i, 1);
+	HAL_Delay(delay);
+  }
+```
+
+Next, while trying to use the onboard switches SW1 or SW2 for GPIO input, I realized there is no hardware pulldown, the pins are left to float or connected to 3V3. Fortunately there are internal pulldowns that can be turned on inside the MCU.  Maybe I thought of this while designing the board and I just forgot `¯\_(ツ)_/¯` While reviewing the schematic again after this, I also did not add pullups for I2C, but again there are internal pullups that can be enabled inside the MCU.
+
+
+#### Original Debug Notes
 * Trying to program using F3Discovery board as an ST-LINK and getting 
 
 > Error message from debugger back end:  
@@ -203,6 +220,8 @@ http://eleceng.dit.ie/frank/arm/STM32F030ISP/index.html
 
 Maybe try after driving boot pin high:
 https://electronics.stackexchange.com/questions/410386/stm32f0-boot0-pin-and-swd-programming 
+
+
 
 
 ---
