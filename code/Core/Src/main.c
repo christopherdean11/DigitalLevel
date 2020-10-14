@@ -41,7 +41,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
-uint32_t delay;
 
 /* USER CODE BEGIN PV */
 
@@ -57,34 +56,51 @@ static void MX_I2C1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+volatile uint32_t delay;
+volatile uint8_t direction;
+uint8_t state;
 
-void scanLedsOneState(uint32_t delay, uint8_t state){
-  for (uint8_t i=0; i<4;i++){
-	  HAL_GPIO_WritePin(GPIOA, 1<<i, state);
-	  HAL_Delay(delay);
-  }
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, state);
-  HAL_Delay(delay);
-  for (uint8_t i=4; i<8;i++){
-	  HAL_GPIO_WritePin(GPIOA, 1<<i, state);
-	  HAL_Delay(delay);
-  }
+
+void writeLedState(uint8_t led_id, GPIO_PinState state){
+	if (led_id < 5){
+		HAL_GPIO_WritePin(GPIOA, 1<<(led_id-1), state);
+	} else if (led_id > 5) {
+		HAL_GPIO_WritePin(GPIOA, 1<<(led_id-2), state);
+	} else{
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, state);
+	}
 }
-void scanLeds(uint32_t delay){
-	scanLedsOneState(delay, 1);
-	scanLedsOneState(delay, 0);
+
+void scanLeds(){
+	// direction == 1 -> count from 1 to 9
+	// direction == 0 -> count from 9 to 1
+	int8_t cur_dir = direction;
+	int8_t i;
+	i = direction ? 1 : 9;
+    // sweep either direction and reflect direction state on the fly
+	while (i < 10 && i > 0) {
+		state = cur_dir == direction ? state : 1 - state;
+		cur_dir = direction;
+		i += direction ? 1 : -1;
+		writeLedState(i, state);
+		HAL_Delay(delay);
+	}
 
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-
-	if (HAL_GPIO_ReadPin(GPIOF, GPIO_Pin)){
-		delay-=50;
+	if (GPIO_Pin == GPIO_PIN_0){
+		// && (HAL_GPIO_ReadPin(GPIOF, GPIO_Pin))
+		// don't need to check if readPin is high, it had to be to even get here
+		if (delay < 100){
+			delay = 250;
+		}else{
+			delay = 50;
+		}
 	}
-	if (delay < 50){
-		delay = 200;
+	if (GPIO_Pin == GPIO_PIN_1) {
+		direction = 1 - direction;
 	}
-
 }
 
 /* USER CODE END 0 */
@@ -124,15 +140,17 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  delay = 200;
+  delay = 250;
+  direction = 0;
+  state = 0;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  scanLeds(delay);
-	  HAL_Delay(200);
-
+	  scanLeds();
+	  state = 1 - state;
+	  // HAL_Delay(5);
 
   }
   /* USER CODE END 3 */
@@ -240,11 +258,11 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED6_Pin|LED7_Pin|LED8_Pin|LED9_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : SW0_Pin SW1_Pin */
   GPIO_InitStruct.Pin = SW0_Pin|SW1_Pin;
@@ -252,21 +270,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA0 PA1 PA2 PA3
-                           PA4 PA5 PA6 PA7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+  /*Configure GPIO pins : LED1_Pin LED2_Pin LED3_Pin LED4_Pin
+                           LED6_Pin LED7_Pin LED8_Pin LED9_Pin */
+  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED6_Pin|LED7_Pin|LED8_Pin|LED9_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  /*Configure GPIO pin : LED5_Pin */
+  GPIO_InitStruct.Pin = LED5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(LED5_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
