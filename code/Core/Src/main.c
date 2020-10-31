@@ -19,6 +19,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "accelerometer.h"
+#include "led.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -44,6 +46,9 @@ I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN PV */
 
+volatile uint32_t delay;
+volatile uint8_t direction;
+volatile uint8_t state;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -56,37 +61,7 @@ static void MX_I2C1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint32_t delay;
-volatile uint8_t direction;
-uint8_t state;
 
-
-void writeLedState(uint8_t led_id, GPIO_PinState state){
-	if (led_id < 5){
-		HAL_GPIO_WritePin(GPIOA, 1<<(led_id-1), state);
-	} else if (led_id > 5) {
-		HAL_GPIO_WritePin(GPIOA, 1<<(led_id-2), state);
-	} else{
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, state);
-	}
-}
-
-void scanLeds(){
-	// direction == 1 -> count from 1 to 9
-	// direction == 0 -> count from 9 to 1
-	int8_t cur_dir = direction;
-	int8_t i;
-	i = direction ? 1 : 9;
-    // sweep either direction and reflect direction state on the fly
-	while (i < 10 && i > 0) {
-		state = cur_dir == direction ? state : 1 - state;
-		cur_dir = direction;
-		i += direction ? 1 : -1;
-		writeLedState(i, state);
-		HAL_Delay(delay);
-	}
-
-}
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if (GPIO_Pin == GPIO_PIN_0){
@@ -103,6 +78,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 }
 
+
 /* USER CODE END 0 */
 
 /**
@@ -112,7 +88,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -143,15 +118,29 @@ int main(void)
   delay = 250;
   direction = 0;
   state = 0;
+
+  LED_blink(1, 3);
+  ACCEL_verifyI2C(&hi2c1, ADXL343_ADDRESS, (uint8_t) 0, (uint8_t) 0xE5);
+  LED_blink(5, 3);
+  ACCEL_enableMeasurements(&hi2c1, ADXL343_ADDRESS);
+  LED_disableAll();
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  scanLeds();
-	  state = 1 - state;
-	  // HAL_Delay(5);
 
+	  // read xhigh and xlow registers
+	  // replace this with a 2 bye read
+
+	  float gx = ACCEL_getX(&hi2c1);
+	  float gy = ACCEL_getY(&hi2c1);
+	  float gz = ACCEL_getZ(&hi2c1);
+
+
+
+
+	  HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
