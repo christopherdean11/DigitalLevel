@@ -1,5 +1,6 @@
 /code/Drivers
 /code/Debug
+/code/Release
 /code/.settings
 /code_original
 *.xlsx
@@ -8,3 +9,4 @@
 /.settings
 .*project
 Digital_Level Debug.*
+*.o
