@@ -119,11 +119,12 @@ int main(void)
   direction = 0;
   state = 0;
 
-  LED_blink(1, 3);
+  uint8_t activeAxis = ACCEL_X_ID;
+
   ACCEL_verifyI2C(&hi2c1, ADXL343_ADDRESS, (uint8_t) 0, (uint8_t) 0xE5);
-  LED_blink(5, 3);
-  ACCEL_enableMeasurements(&hi2c1, ADXL343_ADDRESS);
+  ACCEL_enableMeasurements(&hi2c1);
   LED_disableAll();
+
   while (1)
   {
     /* USER CODE END WHILE */
@@ -135,12 +136,29 @@ int main(void)
 
 	  float gx = ACCEL_getX(&hi2c1);
 	  float gy = ACCEL_getY(&hi2c1);
-	  float gz = ACCEL_getZ(&hi2c1);
+//	  float gz = ACCEL_getZ(&hi2c1);
 
+	  // LED_disableAll();
+	  int8_t led;
+	  float g;
+	  if (activeAxis == ACCEL_X_ID){
+		  g = gx;
+	  }else if (activeAxis == ACCEL_Y_ID){
+		  g = gy;
+	  }
 
+	  // LED position calc
+	  // center led + (g * num LEDs per side)
+	  led = 5 + (g*4);
 
+	  if (led!=5){
+		  LED_writeState(led, 1);
+	  } else{
+		  LED_blink(led, 2);
+	  }
 
-	  HAL_Delay(50);
+	  LED_disableAll();
+	  HAL_Delay(20);
   }
   /* USER CODE END 3 */
 }

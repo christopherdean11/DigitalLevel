@@ -24,12 +24,12 @@ void ACCEL_verifyI2C(I2C_HandleTypeDef *h, uint16_t deviceAddress, uint8_t adrTo
 	}
 }
 
-void ACCEL_enableMeasurements(I2C_HandleTypeDef *hi2c, uint16_t deviceAddress){
+void ACCEL_enableMeasurements(I2C_HandleTypeDef *hi2c){
 	// enable measurement mode
 	uint8_t i2cbuf[2];
 	i2cbuf[0] = 0x2D; // POWER_CTL address
 	i2cbuf[1] = (1 << 3);  // set bit3 to put into measure mode and out of sleep
-	HAL_I2C_Master_Transmit(hi2c, deviceAddress, i2cbuf, 2, I2C_TIMEOUT);
+	HAL_I2C_Master_Transmit(hi2c, ADXL343_ADDRESS, i2cbuf, 2, I2C_TIMEOUT);
 }
 
 uint8_t ACCEL_readReg(I2C_HandleTypeDef *hi2c,uint8_t address){

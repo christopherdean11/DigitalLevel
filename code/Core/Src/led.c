@@ -28,7 +28,7 @@ void LED_writeState(uint8_t led_id, GPIO_PinState state){
 
 void LED_disableAll(){
 	for (uint8_t i = 1; i < 10; i++){
-		LED_writeState(1, 0);
+		LED_writeState(i, GPIO_PIN_RESET);
 	}
 }
 
