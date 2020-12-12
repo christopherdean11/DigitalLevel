@@ -19,12 +19,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "accelerometer.h"
-#include "led.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "accelerometer.h"
+#include "led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,6 +48,10 @@ I2C_HandleTypeDef hi2c1;
 volatile uint32_t delay;
 volatile uint8_t direction;
 volatile uint8_t state;
+volatile uint8_t accel_range;
+volatile uint8_t activeAxis;
+volatile int8_t sens_gain = 2;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,17 +67,34 @@ static void MX_I2C1_Init(void);
 
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+
+	// don't need to check if readPin is high, it had to be to even get here
 	if (GPIO_Pin == GPIO_PIN_0){
-		// && (HAL_GPIO_ReadPin(GPIOF, GPIO_Pin))
-		// don't need to check if readPin is high, it had to be to even get here
-		if (delay < 100){
-			delay = 250;
-		}else{
-			delay = 50;
+		// SW1 (shared with accel INT jumper)
+		// adjust the delay/update rate
+//		if (delay < 100){
+//			delay = 100;
+//		}else{
+//			delay = 20;
+//		}
+
+		// adjust the LED sensitivity gain and blink the nth LED to show gain multiplier
+		sens_gain*=2;
+		if (sens_gain > 8){
+			sens_gain = 1;
 		}
+		LED_disableAll();
+		LED_blink_withDelay(sens_gain, 2, 200);
+
 	}
+
 	if (GPIO_Pin == GPIO_PIN_1) {
-		direction = 1 - direction;
+		// SW2
+		// If jumper is set for ACCEL interrupts
+		// this pin will go high indicating an interrupt was triggered on INT1
+		uint8_t check = ACCEL_readReg(&hi2c1, 0x30); // read INT_SOURCE reg
+		uint8_t dummy = check;
+		// LED_blink_withDelay(9, 3, 100);
 	}
 }
 
@@ -115,50 +135,62 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  delay = 250;
+  delay = 100;
   direction = 0;
   state = 0;
+  accel_range = 0;
 
-  uint8_t activeAxis = ACCEL_X_ID;
-
+  uint8_t check;
   ACCEL_verifyI2C(&hi2c1, ADXL343_ADDRESS, (uint8_t) 0, (uint8_t) 0xE5);
+  ACCEL_setFullRes(&hi2c1, 0);
+  ACCEL_setRange(&hi2c1, 0);
   ACCEL_enableMeasurements(&hi2c1);
+  ACCEL_setTapThreshold(&hi2c1, 2, 2); // 4 * 62.5mg, 4*625us duration
+  ACCEL_setTapAxes(&hi2c1, 1, 1, 1, 1);
+  ACCEL_enableInterrupts(&hi2c1, 0, 1);
+
+  check = ACCEL_readReg(&hi2c1, 0x2E); // INT_EN register
+  check = ACCEL_readReg(&hi2c1, 0x1D); // THRES_TAP register
+
   LED_disableAll();
 
+  activeAxis = ACCEL_X_ID;
+  int8_t led;
+  float g;
+  uint8_t blink = 0;
   while (1)
-  {
+    {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-	  // read xhigh and xlow registers
-	  // replace this with a 2 bye read
+  	  if (activeAxis == ACCEL_X_ID){
+  		  g = ACCEL_getX(&hi2c1);
+  	  }else if (activeAxis == ACCEL_Y_ID){
+  		  g = ACCEL_getY(&hi2c1);
+  	  }
 
-	  float gx = ACCEL_getX(&hi2c1);
-	  float gy = ACCEL_getY(&hi2c1);
-//	  float gz = ACCEL_getZ(&hi2c1);
+  	  // LED position calc
+  	  // center led + (g * num LEDs per side)
+  	  led = 5 + (g*4*sens_gain);
+  	  if (led > 9){
+  		  led = 9;
+  		  blink = 1;
+  	  } else if (led < 1){
+  		  led = 1;
+  		  blink = 1;
+  	  } else{
+  		  blink = 0;
+  	  }
+  	  if (blink){
+  		  LED_blink_withDelay(led, 2, 100);
+  	  } else {
+  		  LED_writeState(led, 1);
+  	  }
 
-	  // LED_disableAll();
-	  int8_t led;
-	  float g;
-	  if (activeAxis == ACCEL_X_ID){
-		  g = gx;
-	  }else if (activeAxis == ACCEL_Y_ID){
-		  g = gy;
-	  }
+  	  HAL_Delay(delay);
+      LED_disableAll();
 
-	  // LED position calc
-	  // center led + (g * num LEDs per side)
-	  led = 5 + (g*4);
-
-	  if (led!=5){
-		  LED_writeState(led, 1);
-	  } else{
-		  LED_blink(led, 2);
-	  }
-
-	  LED_disableAll();
-	  HAL_Delay(20);
   }
   /* USER CODE END 3 */
 }
@@ -294,7 +326,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LED5_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
 
 }

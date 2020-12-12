@@ -32,7 +32,12 @@ void ACCEL_enableMeasurements(I2C_HandleTypeDef *hi2c){
 	HAL_I2C_Master_Transmit(hi2c, ADXL343_ADDRESS, i2cbuf, 2, I2C_TIMEOUT);
 }
 
-uint8_t ACCEL_readReg(I2C_HandleTypeDef *hi2c,uint8_t address){
+void ACCEL_writeReg(I2C_HandleTypeDef *hi2c, uint8_t address, uint8_t data){
+	uint8_t buf[2] = {address, data};
+	HAL_I2C_Master_Transmit(hi2c, ADXL343_ADDRESS, buf, 2, I2C_TIMEOUT);
+}
+
+uint8_t ACCEL_readReg(I2C_HandleTypeDef *hi2c, uint8_t address){
 	uint8_t i2cbuf[1];
 	i2cbuf[0] = address;
 	HAL_I2C_Master_Transmit(hi2c, ADXL343_ADDRESS, i2cbuf, 1, I2C_TIMEOUT);
@@ -72,6 +77,49 @@ float ACCELp_readAcceleration(I2C_HandleTypeDef *hi2c, uint8_t address){
 	return g;
 }
 
+void ACCEL_setRange(I2C_HandleTypeDef *hi2c, uint8_t range){
+	assert_param(range<4);
+	uint8_t i2cbuf[2];
+	// get current contents in register
+	ACCEL_readRegs(hi2c, 0x31, i2cbuf, 1);
+	// set bits [1:0] to program the range field
+	i2cbuf[0] |= range;
+	// move the value to buffer position 1
+	// and set position 0 to DATA_FOMAT register address
+	i2cbuf[1] = i2cbuf[0];
+	i2cbuf[0] = 0x31;
+	// write the register with the new range set
+	HAL_I2C_Master_Transmit(hi2c, ADXL343_ADDRESS, i2cbuf, 2, I2C_TIMEOUT);
+}
+
+void ACCEL_setFullRes(I2C_HandleTypeDef *hi2c, uint8_t enable){
+	uint8_t i2cbuf[2];
+	// get current contents in register
+	ACCEL_readRegs(hi2c, 0x31, i2cbuf, 1);
+	// set bits [3] to set the FULL_RES field
+	i2cbuf[0] |= 8*enable;
+	// move the value to buffer position 1
+	// and set position 0 to DATA_FOMAT register address
+	i2cbuf[1] = i2cbuf[0];
+	i2cbuf[0] = 0x31;
+	// write the register with the new range set
+	HAL_I2C_Master_Transmit(hi2c, ADXL343_ADDRESS, i2cbuf, 2, I2C_TIMEOUT);
+}
+
+void ACCEL_setTapThreshold(I2C_HandleTypeDef *hi2c, uint8_t thresh, uint8_t dur){
+	ACCEL_writeReg(hi2c, 0x1D, thresh); // 1 LSB = 62.5mg
+	ACCEL_writeReg(hi2c, 0x21, dur); // 1 LSB = 625us
+}
+
+void ACCEL_setTapAxes(I2C_HandleTypeDef *hi2c, uint8_t en_x, uint8_t en_y, uint8_t en_z, uint8_t suppress_doubletap){
+	uint8_t data = en_z | (en_y<<1) | (en_x << 2) | (suppress_doubletap << 3);
+	ACCEL_writeReg(hi2c, 0x2A, data);
+}
+
+void ACCEL_enableInterrupts(I2C_HandleTypeDef *hi2c, uint8_t data_ready, uint8_t single_tap){
+	uint8_t data = (data_ready << 7) | (single_tap << 6);
+	ACCEL_writeReg(hi2c, 0x2E, data);
+}
 
 
 

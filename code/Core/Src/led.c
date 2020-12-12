@@ -39,6 +39,8 @@ void LED_blink_withDelay(uint8_t led_id, uint8_t iter, uint32_t delay){
 		LED_writeState(led_id, 1);
 		HAL_Delay(delay);
 	}
+	// disable after blink is done
+	LED_writeState(led_id, 0);
 }
 
 void LED_blink(uint8_t led_id, uint8_t iter){
